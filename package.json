@@ -1,0 +1,15 @@
+{
+  "name": "leadboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/run.js",
+    "dev": "node src/run.js --dev",
+    "suppress": "node src/suppress.js",
+    "sample": "node src/sample.js"
+  }
+}
