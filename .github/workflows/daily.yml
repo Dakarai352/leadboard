@@ -1,0 +1,44 @@
+name: daily-leads
+
+on:
+  schedule:
+    - cron: '0 15 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-leads
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - run: npm ci --omit=dev || npm install --omit=dev
+
+      - name: Generate leads
+        env:
+          GOOGLE_PLACES_KEY: ${{ secrets.GOOGLE_PLACES_KEY }}
+        run: node src/run.js
+
+      - name: Commit page + seen list
+        run: |
+          git config user.name  "leadboard-bot"
+          git config user.email "leadboard-bot@users.noreply.github.com"
+          git add dist data/seen.json
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "leads: $(date -u -d '-8 hours' +%Y-%m-%d)"
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
